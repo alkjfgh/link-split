@@ -23,35 +23,46 @@ function App() {
       }
       
       const lines = text.split('\n')
-      lines.forEach(line => {
+      lines.forEach((line, index) => {
         const trimmedLine = line.trim()
         if (!trimmedLine) return
 
-        if (trimmedLine.endsWith('.var') || trimmedLine.includes('.latest')) {
-          let name = trimmedLine
-          let author = ''
-          let license = ''
-          let url = null
-
-          if (trimmedLine.includes('By:')) {
-            const parts = trimmedLine.split('By:')
-            name = parts[0].trim()
-            
-            const remainingParts = parts[1].trim().split('License:')
-            author = remainingParts[0].trim()
-            
-            if (remainingParts[1]) {
-              const linkParts = remainingParts[1].trim().split('Link:')
-              license = linkParts[0].trim()
-              url = linkParts[1]?.trim() || null
+        if (trimmedLine.startsWith('----')) {
+          if (index > 0) {
+            const prevLine = lines[index - 1].trim()
+            if (prevLine && !prevLine.includes('http')) {
+              if (currentSection.items.length > 0) {
+                sections.push({...currentSection})
+              }
+              currentSection = {
+                title: prevLine,
+                items: []
+              }
             }
           }
+          return
+        }
 
+        if (trimmedLine.includes('http')) {
+          const parts = trimmedLine.split(/\s+/)
+          const name = parts[0].trim()
+          const url = parts.find(part => part.startsWith('http'))
+
+          if (name && url) {
+            currentSection.items.push({
+              name,
+              url: url.trim(),
+              author: '',
+              license: ''
+            })
+          }
+        }
+        else if ((trimmedLine.endsWith('.var') || trimmedLine.includes('.latest')) && !trimmedLine.includes('http')) {
           currentSection.items.push({
-            name,
-            author,
-            license,
-            url
+            name: trimmedLine,
+            url: null,
+            author: '',
+            license: ''
           })
         }
       })

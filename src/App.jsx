@@ -23,52 +23,40 @@ function App() {
       }
       
       const lines = text.split('\n')
-      lines.forEach((line, index) => {
+      lines.forEach(line => {
         const trimmedLine = line.trim()
-        
-        if (trimmedLine.startsWith('----')) {
-          if (index > 0) {
-            const prevLine = lines[index - 1].trim()
-            if (prevLine && !prevLine.includes('http') && !prevLine.includes('Link:')) {
-              if (currentSection.title) {
-                sections.push({...currentSection})
-              }
-              currentSection = {
-                title: prevLine,
-                items: []
-              }
+        if (!trimmedLine) return
+
+        if (trimmedLine.endsWith('.var') || trimmedLine.includes('.latest')) {
+          let name = trimmedLine
+          let author = ''
+          let license = ''
+          let url = null
+
+          if (trimmedLine.includes('By:')) {
+            const parts = trimmedLine.split('By:')
+            name = parts[0].trim()
+            
+            const remainingParts = parts[1].trim().split('License:')
+            author = remainingParts[0].trim()
+            
+            if (remainingParts[1]) {
+              const linkParts = remainingParts[1].trim().split('Link:')
+              license = linkParts[0].trim()
+              url = linkParts[1]?.trim() || null
             }
           }
-        } else if (trimmedLine && !trimmedLine.startsWith('----')) {
-          if (trimmedLine.includes('.var')) {
-            currentSection.items.push({
-              name: trimmedLine.trim(),
-              url: null
-            })
-          } else if (trimmedLine.includes('http') || trimmedLine.includes('Link:')) {
-            let name, url
 
-            if (trimmedLine.includes('Link:')) {
-              const parts = trimmedLine.split('Link:')
-              name = parts[0].split('By:')[0].trim()
-              url = parts[1].trim()
-            } else {
-              const parts = trimmedLine.split(/[\s-]+/)
-              name = parts[0].trim()
-              url = parts.find(part => part.startsWith('http'))
-            }
-
-            if (name && url) {
-              currentSection.items.push({
-                name: name.trim(),
-                url: url.trim()
-              })
-            }
-          }
+          currentSection.items.push({
+            name,
+            author,
+            license,
+            url
+          })
         }
       })
       
-      if (currentSection.title && currentSection.items.length > 0) {
+      if (currentSection.items.length > 0) {
         sections.push(currentSection)
       }
       
@@ -133,22 +121,32 @@ function App() {
                 <h3 className="text-xl font-medium text-gray-700 mb-3">{section.title}</h3>
                 <ul className="space-y-3">
                   {section.items.map((item, i) => (
-                    <li key={i} className="flex items-center justify-between">
-                      <span className="text-gray-600">{item.name}</span>
-                      {item.url ? (
-                        <a 
-                          href={item.url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200"
-                        >
-                          Download
-                        </a>
-                      ) : (
-                        <span className="px-4 py-2 bg-gray-300 text-gray-600 rounded">
-                          Hub에서 다운로드
-                        </span>
-                      )}
+                    <li key={i} className="flex flex-col space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex flex-col text-left">
+                          <span className="text-gray-800 font-medium">{item.name}</span>
+                          {item.author && (
+                            <span className="text-sm text-gray-600">
+                              By: {item.author}
+                              {item.license && ` • License: ${item.license}`}
+                            </span>
+                          )}
+                        </div>
+                        {item.url ? (
+                          <a 
+                            href={item.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200"
+                          >
+                            Download
+                          </a>
+                        ) : (
+                          <span className="px-4 py-2 bg-gray-300 text-gray-600 rounded">
+                            Hub에서 다운로드
+                          </span>
+                        )}
+                      </div>
                     </li>
                   ))}
                 </ul>

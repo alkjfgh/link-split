@@ -26,10 +26,10 @@ function App() {
       lines.forEach((line, index) => {
         const trimmedLine = line.trim()
         
-        if (trimmedLine === '------------') {
+        if (trimmedLine.startsWith('----')) {
           if (index > 0) {
             const prevLine = lines[index - 1].trim()
-            if (prevLine) {
+            if (prevLine && !prevLine.includes('http')) {
               if (currentSection.title) {
                 sections.push({...currentSection})
               }
@@ -40,12 +40,13 @@ function App() {
             }
           }
         } else if (trimmedLine && trimmedLine.includes('http')) {
-          const [name, ...rest] = trimmedLine.split(/\s+/)
-          const url = rest.find(part => part.startsWith('http'))
+          const parts = trimmedLine.split(/[\s-]+/)
+          const name = parts[0].trim()
+          const url = parts.find(part => part.startsWith('http'))
           if (name && url) {
             currentSection.items.push({
               name: name.trim(),
-              url: url
+              url: url.trim()
             })
           }
         }

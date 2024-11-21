@@ -39,14 +39,21 @@ function App() {
               }
             }
           }
-        } else if (trimmedLine && trimmedLine.includes('http')) {
-          const parts = trimmedLine.split(/[\s-]+/)
-          const name = parts[0].trim()
-          const url = parts.find(part => part.startsWith('http'))
-          if (name && url) {
+        } else if (trimmedLine && !trimmedLine.startsWith('----')) {
+          if (trimmedLine.includes('http')) {
+            const parts = trimmedLine.split(/[\s-]+/)
+            const name = parts[0].trim()
+            const url = parts.find(part => part.startsWith('http'))
+            if (name && url) {
+              currentSection.items.push({
+                name: name.trim(),
+                url: url.trim()
+              })
+            }
+          } else if (trimmedLine.includes('.var')) {
             currentSection.items.push({
-              name: name.trim(),
-              url: url.trim()
+              name: trimmedLine.trim(),
+              url: null
             })
           }
         }
@@ -119,14 +126,20 @@ function App() {
                   {section.items.map((item, i) => (
                     <li key={i} className="flex items-center justify-between">
                       <span className="text-gray-600">{item.name}</span>
-                      <a 
-                        href={item.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200"
-                      >
-                        Download
-                      </a>
+                      {item.url ? (
+                        <a 
+                          href={item.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200"
+                        >
+                          Download
+                        </a>
+                      ) : (
+                        <span className="px-4 py-2 bg-gray-300 text-gray-600 rounded">
+                          Hub에서 다운로드
+                        </span>
+                      )}
                     </li>
                   ))}
                 </ul>

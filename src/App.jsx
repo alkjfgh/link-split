@@ -29,7 +29,7 @@ function App() {
         if (trimmedLine.startsWith('----')) {
           if (index > 0) {
             const prevLine = lines[index - 1].trim()
-            if (prevLine && !prevLine.includes('http')) {
+            if (prevLine && !prevLine.includes('http') && !prevLine.includes('Link:')) {
               if (currentSection.title) {
                 sections.push({...currentSection})
               }
@@ -40,21 +40,30 @@ function App() {
             }
           }
         } else if (trimmedLine && !trimmedLine.startsWith('----')) {
-          if (trimmedLine.includes('http')) {
-            const parts = trimmedLine.split(/[\s-]+/)
-            const name = parts[0].trim()
-            const url = parts.find(part => part.startsWith('http'))
+          if (trimmedLine.includes('.var')) {
+            currentSection.items.push({
+              name: trimmedLine.trim(),
+              url: null
+            })
+          } else if (trimmedLine.includes('http') || trimmedLine.includes('Link:')) {
+            let name, url
+
+            if (trimmedLine.includes('Link:')) {
+              const parts = trimmedLine.split('Link:')
+              name = parts[0].split('By:')[0].trim()
+              url = parts[1].trim()
+            } else {
+              const parts = trimmedLine.split(/[\s-]+/)
+              name = parts[0].trim()
+              url = parts.find(part => part.startsWith('http'))
+            }
+
             if (name && url) {
               currentSection.items.push({
                 name: name.trim(),
                 url: url.trim()
               })
             }
-          } else if (trimmedLine.includes('.var')) {
-            currentSection.items.push({
-              name: trimmedLine.trim(),
-              url: null
-            })
           }
         }
       })
